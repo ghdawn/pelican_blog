@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 AUTHOR = u'\u6e05\u98ce\u672a\u660e'
 SITENAME = u'\u8bb0\u5f55'
-SITEURL = ''
+SITEURL = 'http://ghdawn.me'
 
 TIMEZONE = 'Asia/Shanghai'
 
