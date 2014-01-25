@@ -2,4 +2,4 @@ git add .
 git commit -m 'update'
 git push origin master
 make html
-./output/deploy.sh
+cd output | ./deploy.sh
