@@ -37,8 +37,8 @@ LINKS =  (('DFDNN', 'https://dangfan.me/zhs'),
           )
 
 # Social widget
-SOCIAL = (('github', 'https://github.com/ghdawn'),
-          ('饭否', 'http://fanfou.com/home'))
+SOCIAL = (('@github', 'https://github.com/ghdawn'),
+          ('@饭否', 'http://fanfou.com/home'))
 DEFAULT_PAGINATION = 7
 
 # Uncomment following line if you want document-relative URLs when developing
