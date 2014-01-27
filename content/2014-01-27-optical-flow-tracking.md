@@ -1,0 +1,214 @@
+title:使用光流法跟踪图像中的点
+date:2014-01-27 18:51:02
+comments: true 
+Tags:计算机视觉
+Category:Study
+
+在计算机视觉的研究中，经常会出现以下问题：
+
+1. 给定两幅图像，把他们拼接起来
+2. 给定图像序列，找出其中的运动部分
+3. 跟踪图像中的某个对象
+
+人们针对这一类问题，提出了很多解决办法。其中有一种考虑方法就是，这些问题都需要建立起图像间像素点的匹配关系，当知道了任意像素点在图像间的运动速度时，就可以建立起匹配关系，也就解决了这些问题。而像素点的运动就称为**光流**.因此，当我们求出了图像中某一点的运动速度，可以说求出了**光流**;或者当我们求出了两幅图像中对应点的匹配关系时，也可以说求出了**光流**。
+##光流的求解方法
+
+###最简单粗暴的方法
+当我看到Eth（苏黎世理工大学）的这个算法时，我都惊呆了——这也可以？他们在*An Open Source and Open Hardware Embedded Metric Optical Flow CMOS Camera for Indoor and Outdoor Applications*这篇论文中使用了一个名为块匹配的方法。该方法对选定的某一像素点，取出第二幅图像中以该坐标为中心，$\pm 4$范围内的所有点作为候选。对于这些候选点，以它们为中心，取$8 \times 8$的块与源图像求绝对差值和。绝对值差和最小的那个点就作为原点在第二幅图像中新的位置。由于该方法计算速度很快，两帧图像之间的变化很小，所以取这样小一个范围也是可行的。
+
+###最经典主流的方法
+最常见求解光流的方法是由Lucas和Kanade两人提出的方法。为了说清楚这个方法，我们先把问题表述的专业一点：
+
+设$I$和$J$是两张连续灰度图像($I(t+1)=J(t)$)，其中的任意点坐标为$\textbf{x}=[x\quad y]^T$,任意像素点的值由离散函数$I(\textbf{x}),J(\textbf{x})$表示。 对于图像$I$中的一个点$\textbf{u}=[u_x\quad u_y]^T$,我们的目标就是找到一$\textbf{v}=\textbf{u}+\textbf{d}=[u_x+d_x\quad u_y+d_y]^T$，使得$I(\textbf{u})=J(\textbf{v})$，或者使得$I(\textbf{u})$和$J(\textbf{v})$尽可能的相似，而$\textbf{d}$就是在点$\textbf{u}$处的光流值。
+
+为了便于求解，需要做出如下假设：
+1. 小运动： 任意点在两帧图像之间的运动很小
+2. 亮度恒定：对于一个确定的点，它的亮度在连续的图像中不变（或者变化很小）。
+3. 空间一致性： 任意点的运动和它临域内的点相似
+
+第一个假设是第二个假设的基础，正是由于任意点的运动较小，才能假定其亮度在连续的图像中不变（或者变化很小），对于第2个亮度恒定的假设，可以得到：
+$$
+I(x,y,t)=I(x+u,y+v,t+1)
+$$
+将右边对时间t进行泰勒展开，得到
+$$
+I(x+u,y+v,t+1)=I(x,y,t)+I_x \cdot u+I_y \cdot + I_t
+$$
+两式联立可得
+$$
+I_x \cdot u+I_y \cdot + I_t=0
+$$
+$$
+[I_x\quad I_y]\cdot [u\quad  v]^T+I_t=0
+$$
+这样对于每一个点，我们得到了一个有两个未知数的方程，无法求出准确解。这时第三个假设就派上用场了。由于点的空间一致性，可以假设一个点及其临域内的点有相同的速度。设取一个$5\times 5$的窗口取临域，那么对于任意点可以得到25个方程，联立可得
+
+\begin{equation}
+\left[ \begin{array} {cc}
+I_x(point1) & I_y(point1)\\\
+I_x(point2) & I_y(point2)\\\
+\vdots & \vdots\\\
+I_x(point25) & I_y(point25)\\\
+\end{array}\right]
+\left[ \begin{array} {c}
+u \\\
+v
+\end{array}\right]
+=-\left[ \begin{array} {c}
+I_t(point1) \\\
+I_t(point2) \\\
+\vdots \\\
+I_t(point25) \\\
+\end{array}\right]
+\end{equation}
+
+这样可以得到了一个方程数量大于未知数数量的超定方程组，可以通过求解其最小二乘解来得出速度。
+将上式的三个矩阵写为代数形式，并化为：
+$$
+A\cdot d=b
+$$
+$$
+(A^TA) d= A^Tb
+$$
+$$
+d=(A^TA)^{-1}A^Tb
+$$
+其中：
+$$
+A^TA=
+\left[ \begin{array} {cc}
+\sum I_xI_x & \sum I_xI_y \\\
+\sum I_xI_y & \sum I_yI_y
+\end{array}\right]
+$$
+$$
+A^Tb=-
+\left[ \begin{array} {c}
+\sum I_xI_t \\\
+\sum I_yI_t
+\end{array}\right]
+$$
+这样就可以推导出求解任意点出光流的方法了。
+
+这个方法有一个缺陷，小速度，亮度不变以及区域一致性都是较强的假设，并不很容易得到满足。如当物体运动速度较快时，假设不成立，那么后续的假设就会有较大的偏差，使得最终求出的光流值有较大的误差。
+
+###LK方法的金字塔改进
+为了更符合实际一些，我们先换一个目标：设临域窗口半径为$w$，则光流$\textbf{d}$定义为最小化残差方程$\epsilon$的速度，其中
+\begin{equation}
+\label{residual1}
+\epsilon(\textbf{d})=\epsilon(d_x,d_y)=\sum_{x=u_x-w}^{u_x+w}\sum_{y=u_y-w}^{u_y+w}( I(x,y)-J(x+d_x,y+d_y))^2
+\end{equation}
+这个残差方程在一个$(2w+1)\times(2w+1)$的窗口上测量。
+
+考虑物体的运动速度较大时，算法会出现较大的误差。那么就希望能减少图像中物体的运动速度。一个直观的方法就是，缩小图像的尺寸。假设当图像为400×400时，物体速度为[16 16],那么图像缩小为200×200时，速度变为[8,8]。缩小为100*100时，速度减少到[4,4]。所以在源图像缩放了很多以后，原算法又变得适用了。所以光流可以通过生成原图像的金字塔图像，逐层求解，不断精确来求得。
+
+假设图像的宽高每次缩放为原来的一半，共缩放了$L_m$层，则第0层为原图像。设已知原图的速度向量为$\textbf{d}$，则每一层的速度为
+$$
+\textbf{d}^L=\frac{\textbf{d}}{2^L}
+$$
+基于金字塔的光流法的大概步骤如下：先在最深层$L_m$中求解光流。这次计算的结果反馈给上一层$L_m-1$，作为该层初始时的光流值的估计$\textbf{g}$。就这样一层一层的向上反馈，直到最高层，即原图。
+则对于每一层L，方程$\ref{residual1}$可以变为：
+
+\begin{equation}
+\label{residual2}
+\epsilon^L(\textbf{d}^L)=\epsilon(d_x^L,d_y^L)=\sum_{x=u_x^L-w}^{u_x^L+w}\sum_{y=u_y^L-w}^{u_y^L+w}( I(x,y)-J(x+g_x^L+d_x^L,y+g_y^L+d_y^L))^2
+\end{equation}
+
+每一层的计算结果$\textbf{d}^L$通过如下方程反馈给上一层作为初始的光流估计：
+$$
+\textbf{g}^{L-1}=2(\textbf{g}^L+\textbf{d}^L)
+$$
+由于金字塔的缩放有效的减小了光流值，最底层的光流估计值可以设为0,即
+$$
+\textbf{g}^{Lm}=[0 \quad 0 ]^T
+$$
+
+### LK方法的迭代改进
+到目前为止，我们讨论了一步求解的光流法，金字塔求解的光流法。下面讨论通过迭代计算的方法提高光流求解精度的方法。
+对于金字塔的每一层，求解的目的都是最小化残差方程$\ref{residual2}$，由于每一层内部的求解方法是一样的，不失一般性可以去掉角标L。为了求解某点p处的光流，定义新的图像如下：
+$$
+\forall (x,y) \in [p_x-w-1,p_x+w+1]\times[p_y-w-1,p_y+w+1], A(x,y)=I^L(x,y)
+$$
+$$
+\forall (x,y) \in [p_x-w,p_x+w]\times[p_y-w,p_y+w], B(x,y)=J^L(x+g_x^L,y+g_y^L)
+$$
+这里图像A的定义域比图像B要大一圈，是因为求解光流时，有一个步骤是求解图像在x，y方向的微分$I_x,I_y$，需要用到每一点的临域。
+设任意点的速度为$v=[v_x \quad v_y]^T=\textbf{d}^L$，位置为$p=[p_x \quad p_y]^T$，则残差方程$\ref{residual2}$化为：
+\begin{equation}
+\label{residual3}
+\epsilon(v)=\epsilon(v_x,v_y)=\sum_{x=p_x-w}^{p_x+w}\sum_{y=p_y-w}^{p_y+w}( A(x,y)-B(x+v_x,y+v_y))^2
+\end{equation}
+和方程$\ref{residual1}$长得差不多了。为了优化该方程，对方程$\ref{residual3}$求导数，并使其为0，有
+
+$$
+\frac{\partial \epsilon(v)}{\partial v}\lvert_{v=v_{opt}}=[0 \quad 0]
+$$
+
+展开该式，得到：
+\begin{equation}
+\label{residual4}
+\frac{\partial\epsilon(v)}{\partial v}=-2\sum_{x=p_x-w}^{p_x+w}\sum_{y=p_y-w}^{p_y+w}( A(x,y)-B(x+v_x,y+v_y))[\frac{\partial B}{\partial x} \quad \frac{\partial B}{\partial y}]
+\end{equation}
+由于金字塔的缩放减少了光流的估计值，则初始估计值v可以设为0,把上式的B在$(0,0)$点泰勒展开，得到
+$$
+\frac{\partial\epsilon(v)}{\partial v}=-2\sum_{x=p_x-w}^{p_x+w}\sum_{y=p_y-w}^{p_y+w}( A(x,y)-B(x,y)-[\frac{\partial B}{\partial x} \quad \frac{\partial B}{\partial y}]v)[\frac{\partial B}{\partial x} \quad \frac{\partial B}{\partial y}]
+$$
+其中的$A(x,y)-B(x,y)$可以看做是图像在p点处时间上的梯度，则有：
+$$
+I_t=\delta I(x,y)=A(x,y)-B(x,y)
+$$
+当图像A，B很相似时，矩阵$[\frac{\partial B}{\partial x} \quad \frac{\partial B}{\partial y}]$则可以看做是图像在$x,y$方向上的梯度，$\nabla I=[I_x I_y]^T=[\frac{\partial B}{\partial x} \quad \frac{\partial B}{\partial y}]$。而该梯度可以通过图像A直接求出：
+$$
+\forall (x,y) \in [p_x-w,p_x+w]\times[p_y-w,p_y+w],
+$$
+
+$$
+I_x(x,y)=\frac{\partial A(x,y)}{\partial x}=\frac{A(x+1,y)-A(x-1,y)}{2},
+$$
+
+$$
+I_y(x,y)=\frac{\partial A(x,y)}{\partial y}=\frac{A(x,y+1)-A(x,y-1)}{2}
+$$
+由此，方程$\ref{residual4}$可以重写为
+$$
+-\frac{1}{2}\frac{\partial\epsilon(v)}{\partial v}=\sum_{x=p_x-w}^{p_x+w}\sum_{y=p_y-w}^{p_y+w}(\nabla I^Tv-\delta I)\nabla I^T
+$$
+\begin{equation}
+\label{residual5}
+-\frac{1}{2}\frac{\partial\epsilon(v)}{\partial v}=\sum_{x=p_x-w}^{p_x+w}\sum_{y=p_y-w}^{p_y+w}(
+\left[ \begin{array} {cc}
+ I_xI_x &  I_xI_y \\\
+ I_xI_y &  I_yI_y
+\end{array}\right] v
+-\left[ \begin{array} {c}
+\delta II_x\\\
+\delta II_y 
+\end{array}\right])
+\end{equation}
+令
+$$
+G=\sum_{x=p_x-w}^{p_x+w}\sum_{y=p_y-w}^{p_y+w}\left[ \begin{array} {cc}
+ I_xI_x &  I_xI_y \\\
+ I_xI_y &  I_yI_y
+\end{array}\right]
+$$
+$$
+b=\sum_{x=p_x-w}^{p_x+w}\sum_{y=p_y-w}^{p_y+w}
+\left[ \begin{array} {c}
+\delta II_x\\\
+\delta II_y 
+\end{array}\right])
+$$
+并令该微分式为0,可得最优化的光流的结果为：
+$$
+v_{opt}=G^{-1}b
+$$
+这样一次的计算结果就出来了，有了这个值，就可以构造新的图像$B_k(x,y)=B_{k-1}(x+v_x,y+v_y)$，重复上面的步骤，其中k是迭代的次数。随着迭代不断的进行，图像A，B之间的相似度越来越高，上述优化的光流值不断的趋近0.那么最终这一层的光流值表示为
+$$
+\textbf{d}^L=\sum_{k=1}^{K} v^k
+$$
+每一层的求出后，再用上一节的方法反馈给上一层，直到求出最终结果为止。
+
+![一个匹配的例子](/image/corr1.pgm)
+
+至此为止，光流法的求解过程就是这样了。具体的代码可以参考我写在视觉库中的[光流部分](https://github.com/zycet/iTRLib/blob/master/itrvision/feature/lktracker.cc)

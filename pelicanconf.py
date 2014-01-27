@@ -21,6 +21,8 @@ SITEMAP = { "format": "xml", "priorities": { "articles": 0.7, "indexes": 0.5, "p
 FEED_ALL_ATOM = None
 CATEGORY_FEED_ATOM = None
 TRANSLATION_FEED_ATOM = None
+DISPLAY_PAGES_ON_MENU = True
+FILENAME_METADATA = '(?P<slug>.*)'
 
 DISQUS_SITENAME = u"ghdawn"
 GOOGLE_ANALYTICS = u"UA-29027763-1"
