@@ -22,6 +22,7 @@ Category:Study
 设$I$和$J$是两张连续灰度图像($I(t+1)=J(t)$)，其中的任意点坐标为$\textbf{x}=[x\quad y]^T$,任意像素点的值由离散函数$I(\textbf{x}),J(\textbf{x})$表示。 对于图像$I$中的一个点$\textbf{u}=[u_x\quad u_y]^T$,我们的目标就是找到一$\textbf{v}=\textbf{u}+\textbf{d}=[u_x+d_x\quad u_y+d_y]^T$，使得$I(\textbf{u})=J(\textbf{v})$，或者使得$I(\textbf{u})$和$J(\textbf{v})$尽可能的相似，而$\textbf{d}$就是在点$\textbf{u}$处的光流值。
 
 为了便于求解，需要做出如下假设：
+
 1. 小运动： 任意点在两帧图像之间的运动很小
 2. 亮度恒定：对于一个确定的点，它的亮度在连续的图像中不变（或者变化很小）。
 3. 空间一致性： 任意点的运动和它临域内的点相似
@@ -209,6 +210,6 @@ $$
 $$
 每一层的求出后，再用上一节的方法反馈给上一层，直到求出最终结果为止。
 
-![一个匹配的例子](/image/corr1.pgm)
+![一个匹配的例子](/image/corr1.jpg)
 
 至此为止，光流法的求解过程就是这样了。具体的代码可以参考我写在视觉库中的[光流部分](https://github.com/zycet/iTRLib/blob/master/itrvision/feature/lktracker.cc)
