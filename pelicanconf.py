@@ -36,6 +36,7 @@ THEME = "bootstrap2"
 LINKS =  (('DFDNN', 'https://dangfan.me/zhs'),
           ('Dumbear', 'http://dumbear.com/'),
           ('逆铭', 'http://www.tomtung.com/'),
+          ('竹子的叶子'),'http://blog.xanahopper.com/'),
           )
 
 # Social widget
