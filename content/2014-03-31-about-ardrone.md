@@ -102,3 +102,4 @@ C_RESULT ardrone_tool_init_custom (void)
 其中，**navdata_demo**的值会调整导航信息的回发速率，为*true*时为15hz（低频），为*false*时超过40Hz（高频）。按照官方网站的说法，**navdata_demo**为*true*只回发姿态数据，即自动修改**navdata_options**的值为传送姿态。**navdata_demo**为*false*时，回传完整的导航数据，自动修改**navdata_options**的值为传送所有的值。但是实践告诉我，还是得自己设置。其中(NAVDATA_ALTITUDE_TAG,NAVDATA_VISION_TAG,NAVDATA_VISION_RAW_TAG)为我添加的标识，其余的是例程中有的。添加这几个标识后，就可以得到高度信息了。这个方法就不能把上一节提到的那段代码注释掉，因为正是使用了上一节的那段代码才把这些配置信息上传过去。
 
 这样配置后，初始时数据全是0,等初始化完成，配置信息上传后，就可以读取出高度数据了。
+最后发现，其实只要飞机不起飞，这些数据怎么都不会稳定正确。飞机起飞后，速度，高度就都可以读取出来了。该死的sdk也没个文档说明一下。
