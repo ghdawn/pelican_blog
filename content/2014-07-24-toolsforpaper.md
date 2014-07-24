@@ -12,6 +12,10 @@ Category:Study
 ffmpeg -r 24  -i %05d.pgm  test.mp4
 ```
 
+效果如下视频：
+
+<embed src="http://player.youku.com/player.php/sid/XNzA4MjI2OTM2/v.swf" allowFullScreen="true" quality="high" width="480" height="400" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed>
+
 ###跟踪结果与GT对比曲线
 这里包括了我的算法，TLD，CT和MIL四种算法，分别与GT进行对比。对比数据包括了中心点误差和矩形框重合率
 ```python
