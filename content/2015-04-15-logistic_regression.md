@@ -20,7 +20,7 @@ $$
 $$sigmoid(x)=\frac{1}{1+e^{-x}}$$
 函数图像如下图所示，它可以将自变量映射在(0,1)的区间内，则把0/1分类的结果转化为样本点属于某个类的概率。
 
-![sigmoid函数](sigmoid.png)
+![sigmoid函数](/image/sigmoid.png)
 
 这样可以写成
 $$ h_\theta(x)=sigmoid(\theta^T \cdot x)$$。
