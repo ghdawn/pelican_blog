@@ -14,7 +14,7 @@ STATIC_PATHS = [u"image"]
 
 #Plugin
 PLUGIN_PATH = u"pelican-plugins"
-PLUGINS = ["sitemap","code_include","latex"]
+PLUGINS = ["sitemap","code_include","render_math"]
 
 SITEMAP = { "format": "xml", "priorities": { "articles": 0.7, "indexes": 0.5, "pages": 0.3, }, "changefreqs": { "articles": "monthly", "indexes": "daily", "pages": "monthly", }}
 # Feed generation is usually not desired when developing
@@ -31,7 +31,7 @@ GOOGLE_ANALYTICS = u"UA-29027763-1"
 FEED_RSS = u"feeds/all.rss.xml" 
 CATEGORY_FEED_RSS=u"feeds/%s.rss.xml"
 
-THEME = "bootstrap2"
+THEME = "pelican-themes/bootstrap2"
 # Blogroll
 LINKS =  (('DFDNN', 'https://dangfan.me/zhs'),
           ('Dumbear', 'http://dumbear.com/'),
