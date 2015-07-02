@@ -13,7 +13,7 @@ STATIC_PATHS = [u"image"]
 
 
 #Plugin
-PLUGIN_PATH = u"pelican-plugins"
+PLUGIN_PATHS = [u"pelican-plugins"]
 PLUGINS = ["sitemap","code_include","render_math"]
 
 SITEMAP = { "format": "xml", "priorities": { "articles": 0.7, "indexes": 0.5, "pages": 0.3, }, "changefreqs": { "articles": "monthly", "indexes": "daily", "pages": "monthly", }}
